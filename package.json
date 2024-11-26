@@ -1,5 +1,5 @@
 {
-  "name": "@lennd/sessionboard-factory-girl",
+  "name": "@sessionboard/sessionboard-factory-girl",
   "description": "A factory library for Node.js and JavaScript inspired by factory_girl",
   "main": "./dist/index",
   "author": [
