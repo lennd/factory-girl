@@ -1,6 +1,6 @@
 name: Publish to GitHub Packages
 
-# Publishes @sessionboard/sessionboard-factory-girl to GitHub Packages
+# Publishes @lennd/sessionboard-factory-girl to GitHub Packages
 # (npm.pkg.github.com) with the workflow's GITHUB_TOKEN, so no npm token
 # is needed or can expire.
 #
@@ -40,13 +40,15 @@ jobs:
         with:
           node-version: '24.21.0'
           registry-url: 'https://npm.pkg.github.com'
-          scope: '@sessionboard'
+          scope: '@lennd'
 
-      # Older commits predate publishConfig/repository in package.json, so
-      # set them at publish time. The repository URL links the package to
-      # this repo on GitHub.
+      # GitHub Packages requires the npm scope to match the GitHub org, so
+      # the package is published as @lennd/<name>. Consumers keep importing
+      # @sessionboard/<name> through an npm alias in their package.json.
+      # Older commits predate these package.json fields, so set them here.
       - name: Point package at GitHub Packages
         run: |
+          npm pkg set name=@lennd/$(node -p "require('./package.json').name.split('/').pop()")
           npm pkg set publishConfig.registry=https://npm.pkg.github.com
           npm pkg set repository.type=git
           npm pkg set repository.url=git+https://github.com/${{ github.repository }}.git
