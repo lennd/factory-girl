@@ -1,0 +1,65 @@
+name: Publish to GitHub Packages
+
+# Publishes @sessionboard/sessionboard-factory-girl to GitHub Packages
+# (npm.pkg.github.com) with the workflow's GITHUB_TOKEN, so no npm token
+# is needed or can expire.
+#
+# - push to master: publishes the version in package.json if it is not
+#   already in the registry. Bump "version" (and rebuild dist/) in your PR to release.
+# - Manual run: publishes the version at any commit (used to backfill
+#   older versions).
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Commit SHA, branch or tag to publish (default: master)'
+        required: false
+        default: 'master'
+
+concurrency:
+  group: publish-${{ github.workflow }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.ref || github.sha }}
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24.21.0'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@sessionboard'
+
+      # Older commits predate publishConfig/repository in package.json, so
+      # set them at publish time. The repository URL links the package to
+      # this repo on GitHub.
+      - name: Point package at GitHub Packages
+        run: |
+          npm pkg set publishConfig.registry=https://npm.pkg.github.com
+          npm pkg set repository.type=git
+          npm pkg set repository.url=git+https://github.com/${{ github.repository }}.git
+
+      - name: Publish if this version is new
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
+            echo "$NAME@$VERSION is already published; nothing to do."
+            exit 0
+          fi
+          npm publish --ignore-scripts
+          echo "Published $NAME@$VERSION to GitHub Packages."

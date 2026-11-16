@@ -26,7 +26,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "http://github.com/aexmachina/factory-girl.git"
+    "url": "git+https://github.com/lennd/factory-girl.git"
   },
   "license": "MIT",
   "bugs": {
@@ -84,5 +84,8 @@
     "test:cover": "NODE_ENV=test babel-node ./node_modules/istanbul/lib/cli.js cover ./node_modules/mocha/bin/_mocha",
     "build": "node tools/build",
     "prepublish": "npm run test && npm run build"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
   }
 }
