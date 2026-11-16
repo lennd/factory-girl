@@ -21,7 +21,7 @@ on:
         default: 'master'
 
 concurrency:
-  group: publish-${{ github.workflow }}
+  group: publish-${{ github.workflow }}-${{ github.event.inputs.ref || github.sha }}
   cancel-in-progress: false
 
 permissions:
@@ -59,7 +59,9 @@ jobs:
         run: |
           NAME=$(node -p "require('./package.json').name")
           VERSION=$(node -p "require('./package.json').version")
-          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
+          # npm view exits 0 with empty output when the version is missing,
+          # so test the output, not the exit code.
+          if [ -n "$(npm view "$NAME@$VERSION" version 2>/dev/null)" ]; then
             echo "$NAME@$VERSION is already published; nothing to do."
             exit 0
           fi
